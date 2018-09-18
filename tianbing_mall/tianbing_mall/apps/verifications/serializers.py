@@ -4,7 +4,7 @@ from django_redis import get_redis_connection
 from redis import RedisError
 from rest_framework import serializers
 
-# 获取在配置文件中定义的logger
+# 获取在配置文件中定义的日志记录器logger
 logger = logging.getLogger('django')
 
 
@@ -12,6 +12,7 @@ class CheckImageCodeSerializer(serializers.Serializer):
     """
     校验图片验证码序列化器
     """
+    # serializers中提供的有UUIDField字段
     image_code_id = serializers.UUIDField()
     text = serializers.CharField(max_length=4, min_length=4)
 
@@ -23,20 +24,20 @@ class CheckImageCodeSerializer(serializers.Serializer):
         image_code_id = attrs["image_code_id"]
         text = attrs["text"]
 
-        # 2,取已保存的值
+        # 2,取真实值
         # 获取redis连接对象
         redis_conn = get_redis_connection("verify_codes")
         # 读取当前
         real_image_code = redis_conn.get("img_%s" % image_code_id)
 
         # 3,判断是否有已保存的值
-        if real_image_code is None:
+        if not real_image_code:  # 等同于:is None
             # 图片验证码不存在或者过期:抛出400异常
             raise serializers.ValidationError("无效的图片验证码")
 
-        # 4,验证存在后进行删除验证码:防止用于对同一验证码多次请求
-        # 排除异常,仅仅做删除处理,不在exception中返回500
+        # 4,验证后删除验证码:1,防止用于对同一验证码多次请求;2,必须放在对比之前
         try:
+            # 排除异常,仅仅做删除处理,不在exception中返回500
             redis_conn.delete("img_%s" % image_code_id)
         except RedisError as e:
             logger.error(e)
@@ -48,9 +49,10 @@ class CheckImageCodeSerializer(serializers.Serializer):
             raise serializers.ValidationError("图片验证码错误")
 
         # 6,验证当前手机号60秒内是否发送过短信
-        # 6.1,类试图指定序列化器的时候会默认补充context字典,包含request/format/view分别对应:请求对象/格式/类试图
-        # 6.2,url路径传参mobile保存在:类试图view的属性kwargs中
+        #   6.1,类试图指定序列化器的时候会默认补充context字典,包含request/format/view分别对应:请求对象/格式/类试图
+        #   6.2,url路径传参mobile保存在:类试图view的属性kwargs中
         mobile = self.context["view"].kwargs["mobile"]
+        # 取发送状态值:防止通过postman发送短信请求!之前的flask项目并没有设置
         send_flag = redis_conn.get("send_flag_%s" % mobile)
         # 判断是否发送过短信
         if send_flag:

@@ -29,7 +29,7 @@ SECRET_KEY = '6@z(i$c69u#%g-s=(^-n4pr+8bfs+wle9wt8i&4k_tspr%f=d_'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["api.tianbing.site", "127.0.0.1", "localhost", "www.tianbing.site"]
 
 
 # Application definition
@@ -42,12 +42,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',  # 注册django-cors-headers跨域
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # 专门解决跨域请求问题
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -200,7 +202,6 @@ LOGGING = {
     }
 }
 
-
 # rest_framework配置
 REST_FRAMEWORK = {
     # 异常处理
@@ -209,6 +210,16 @@ REST_FRAMEWORK = {
 
 # 配置用户模型
 AUTH_USER_MODEL = 'users.User'
+
+# CORS跨域白名单:凡是出现在白名单中的域名，都可以访问后端接口
+CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:8080',
+    'localhost:8080',
+    'www.tianbing.site:8080',
+    'api.tianbing.site:8000'
+)
+# 跨域允许携带cookie
+CORS_ALLOW_CREDENTIALS = True
 
 
 

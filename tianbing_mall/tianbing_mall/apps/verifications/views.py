@@ -1,3 +1,4 @@
+import logging
 import random
 
 from django.http import HttpResponse
@@ -5,15 +6,20 @@ from django.shortcuts import render
 
 # Create your views here.
 from django_redis import get_redis_connection
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+# 自己的包与系统包空一行
 from tianbing_mall.libs.captcha.captcha import captcha
-
-from tianbing_mall.libs.yuntongxun.sms import CCP
+from tianbing_mall.utils.yuntongxun.sms import CCP
 from verifications import constants
 from verifications.serializers import CheckImageCodeSerializer
+from celery_tasks.sms.tasks import send_sms_code
+
+# 获取日志记录器logger
+logger = logging.getLogger('django')
 
 
 class ImageCodeView(APIView):
@@ -30,6 +36,8 @@ class ImageCodeView(APIView):
         redis_conn = get_redis_connection("verify_codes")
         # 保存验证码
         redis_conn.setex("img_%s" % image_code_id, constants.IMAGE_CODE_EXPIRES, text)
+        # 不能使用DRF提供的Response(其继承自HttpResponse),因为Response提供了渲染器render对数据进行渲染,数据必须是字典
+        # 而HttpResponse不会进行加以渲染,指定content_type即可直接将图片对象返回
         return HttpResponse(image, content_type="images/jpg")
 
 
@@ -53,22 +61,35 @@ class SMSCodeView(GenericAPIView):
         sms_code = "%06d" % random.randint(0, 999999)
         # 保存短信验证码/发送记录到redis
         redis_conn = get_redis_connection("verify_codes")
-        # 将保存redis的任务交给redis管道pipeline统一提交
+        # 给redis管道pipeline添加任务:统一提交
         pl = redis_conn.pipeline()
         pl.setex("sms_%s" % sms_code, constants.SMS_CODE_EXPIRES, sms_code)
-        # 通过mobile区分
         pl.setex("send_flag_%s" % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        # 让管道通知redis执行命令
         pl.execute()
 
         # 3,发送
-        ccp = CCP()
-        time = str(constants.SMS_CODE_EXPIRES / 60)  # 使用云通讯设置的发送短信的间隔单位:分钟
-        ccp.send_template_sms(mobile, [sms_code, time], constants.SMS_CODE_TEMP_ID)
+        # try:
+        #     ccp = CCP()
+        #     time = str(constants.SMS_CODE_EXPIRES // 60)  # 使用云通讯设置的发送短信的间隔单位:分钟
+        #     result = ccp.send_template_sms(mobile, [sms_code, time], constants.SMS_CODE_TEMP_ID)
+        # except Exception as e:
+        #     logger.error("发送短信[异常][mobile:%s, message:%s]" % (mobile, e))
+        #     # 4,构造响应:将数据返回,参数依次是:data(字典),status,template_name,headers,content_type
+        #     return Response({"message": "failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # else:
+        #     if result == 0:
+        #         logger.info("发送成功")
+        #         return Response({"message": "OK"})
+        #     else:
+        #         logger.warning("发送短信[失败][mobile:%s]" % mobile)
+        #         return Response({"message": "failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # 4,构造响应:将数据返回,参数依次是:data(字典),status,template_name,headers,content_type
+        # 使用celery发送短信
+        time = str(constants.SMS_CODE_EXPIRES // 60)
+        send_sms_code.delay(mobile, sms_code, time, constants.SMS_CODE_TEMP_ID)
+
         return Response({"message": "OK"})
-
-
 
 
 

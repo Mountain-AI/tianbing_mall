@@ -1,6 +1,7 @@
 var vm = new Vue({
 	el: '#app',
 	data: {
+		host,  // 键值相同的简写
 		error_name: false,
 		error_password: false,
 		error_check_password: false,
@@ -22,6 +23,7 @@ var vm = new Vue({
 
 		sending_flag : false,
 		error_image_code_message: "请填写图片验证码",
+		error_sms_code_message: "请填写短信验证码",
 		sms_code_tip: "请填写短信验证码"
 
 	},
@@ -47,12 +49,12 @@ var vm = new Vue({
 			return uuid;
 		},
 
-		// 生成图片验证码编号
+		// 生成图片验证码编号:后端用captcha生成图片后根据这个编号保存redis
 		generate_image_code: function () {
 			// 严格一点的使用uuid保证编号唯一， 不是很严谨的情况下，也可以使用时间戳
 			this.image_code_id = this.generate_uuid();
 			// 设置页面中图片验证码img标签的src属性
-			this.image_code_url = "http://127.0.0.1:8000/image_codes/" + this.image_code_id + "/";
+			this.image_code_url = this.host + "/image_codes/" + this.image_code_id + "/";
         },
 
 
@@ -134,7 +136,7 @@ var vm = new Vue({
 			}
 
 			// 向后端接口发送请求，让后端发送短信验证码
-			axios.get('http://127.0.0.1:8000/sms_codes/' + this.mobile + '/?text=' + this.image_code+'&image_code_id='+ this.image_code_id, {
+			axios.get(this.host + '/sms_codes/' + this.mobile + '/?text=' + this.image_code + '&image_code_id='+ this.image_code_id, {
 					// 向后端声明，请返回json数据
 					responseType: 'json'
 				})
@@ -162,7 +164,9 @@ var vm = new Vue({
 					if (error.response.status == 400) {
 						this.error_image_code_message = '图片验证码有误';
 						this.error_image_code = true;
+						this.generate_image_code()
 					} else {
+						// 将错误打印在浏览器控制台
 						console.log(error.response.data);
 					}
 					this.sending_flag = false;
