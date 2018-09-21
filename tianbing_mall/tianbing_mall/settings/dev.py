@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'corsheaders',  # 注册django-cors-headers跨域
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
+    'oauth.apps.OauthConfig', # 注册qq登录应用
 
 ]
 
@@ -241,6 +242,12 @@ CORS_ORIGIN_WHITELIST = (
 )
 # 跨域允许携带cookie
 CORS_ALLOW_CREDENTIALS = True
+
+# QQ登录参数
+QQ_CLIENT_ID = '101474184'
+QQ_CLIENT_SECRET = 'c6ce949e04e12ecc909ae6a8b09b637c'
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8080/oauth_callback.html'
+QQ_STATE = '/'
 
 
 
