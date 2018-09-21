@@ -32,6 +32,8 @@ class ImageCodeView(APIView):
         生成图片验证码
         """
         text, image = captcha.generate_captcha()
+        print("图片验证码:", text)
+
         # 获取redis连接对象
         redis_conn = get_redis_connection("verify_codes")
         # 保存验证码
@@ -59,11 +61,13 @@ class SMSCodeView(GenericAPIView):
 
         # 2,生成随机短信验证码并保存
         sms_code = "%06d" % random.randint(0, 999999)
+        print("短信验证码:", sms_code)
+
         # 保存短信验证码/发送记录到redis
         redis_conn = get_redis_connection("verify_codes")
         # 给redis管道pipeline添加任务:统一提交
         pl = redis_conn.pipeline()
-        pl.setex("sms_%s" % sms_code, constants.SMS_CODE_EXPIRES, sms_code)
+        pl.setex("sms_%s" % mobile, constants.SMS_CODE_EXPIRES, sms_code)
         pl.setex("send_flag_%s" % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
         # 让管道通知redis执行命令
         pl.execute()
@@ -86,8 +90,8 @@ class SMSCodeView(GenericAPIView):
         #         return Response({"message": "failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # 使用celery发送短信
-        time = str(constants.SMS_CODE_EXPIRES // 60)
-        send_sms_code.delay(mobile, sms_code, time, constants.SMS_CODE_TEMP_ID)
+        # time = str(constants.SMS_CODE_EXPIRES // 60)
+        # send_sms_code.delay(mobile, sms_code, time, constants.SMS_CODE_TEMP_ID)
 
         return Response({"message": "OK"})
 
