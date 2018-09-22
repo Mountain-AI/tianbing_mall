@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from rest_framework import status
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -92,8 +93,28 @@ class EmailView(UpdateAPIView):
         return self.request.user
 
 
-
-
+# url(r'^emails/verification/$', views.VerifyEmailView.as_view()),
+class VerifyEmailView(APIView):
+    """
+    用户从邮件链接跳转至验证邮箱的视图:通过url中查询字符串token进行用户校验
+    """
+    def get(self, request):
+        """
+        验证邮箱是一个根据token查询匹配用户的过程,get请求即可
+        """
+        # 从url查询字符串中获取token
+        token = request.query_params.get("token")
+        if not token:
+            return Response({"message": "缺少token"}, status=status.HTTP_400_BAD_REQUEST)
+        # 通过在User模型类自定义的静态方法验证token,验证成功会返回当前用户对象
+        user = User.check_verify_email_token(token)
+        if user is None:
+            # 表明token有问题,可能过期
+            return Response({"message": "验证信息无效"}, status=status.HTTP_400_BAD_REQUEST)
+        # 如果用户存在,则将用户数据的邮箱激活状态设为True,返回成功
+        user.email_active = True
+        user.save()
+        return Response({"message": "OK"})
 
 
 

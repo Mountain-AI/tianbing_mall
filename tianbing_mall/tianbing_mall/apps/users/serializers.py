@@ -162,7 +162,7 @@ class EmailSerializer(serializers.ModelSerializer):
 
         # 发送激活验证邮件
         send_active_email.delay(email, url)
-
+        return instance
 
 
 

@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 # Create your models here.
-from itsdangerous import TimedJSONWebSignatureSerializer
+from itsdangerous import TimedJSONWebSignatureSerializer, BadData
 
 from users import constants
 
@@ -34,15 +34,37 @@ class User(AbstractUser):
         serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
         # 嵌入用户数据,一个就行,两个更好
         data = {"user_id": self.id, "email": self.email}
-        # 将当前用户的数据data转成字典后序列化,
-        # 为何要再进行转换
+        # 将当前用户的字典data转成字符串进行序列化
+        # 为何要再进行转换????
         token = serializer.dumps(data).decode()
 
         # 拼接url
-        verify_url = "http://www.tianbing.site:8080/success_verify_email.html/?token=" + token
+        verify_url = "http://www.tianbing.site:8080/success_verify_email.html?token=" + token
         return verify_url
 
-
+    @staticmethod
+    def check_verify_email_token(token):
+        """
+        校验验证邮箱的路径传递到视图中的token:包含user_id 和email
+        :return: 验证成功则返回user
+        """
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
+        # 尝试将tokee进行解析
+        try:
+            data = serializer.loads(token)
+        except BadData:
+            return None
+        else:
+            # 解析成功则动data中获取user_id和email,查询用户数据
+            user_id = data["user_id"]
+            email = data["email"]
+            # 尝试获取用户信息
+            try:
+                user = User.objects.get(id=user_id, email=email)
+            except User.DoesNotExist:
+                return None
+            else:
+                return user
 
 
 

@@ -48,9 +48,36 @@ var vm = new Vue({
             localStorage.clear();
             location.href = '/login.html';
         },
-        // 保存email
-        save_email: function(){
 
+        // 设置email
+        save_email: function(){
+            var re = /^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$/;
+            if(re.test(this.email)) {
+                this.email_error = false;
+            } else {
+                this.email_error = true;
+                return;
+            }
+            // 发送put请求,对应UpdateAPIView类的update方法
+            axios.put(this.host + '/email/',
+                // 请求体数据
+                { email: this.email },
+                // 本次请求的配置信息
+                {
+                    headers: {
+                        // JWT 要求的固定格式
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    responseType: 'json'  // 指明需要返回json数据
+                })
+                .then(response => {
+                    this.set_email = false;
+                    this.send_email_btn_disabled = true;
+                    this.send_email_tip = '已发送验证邮件'
+                })
+                .catch(error => {
+                    alert(error.data);
+                });
         }
     }
 });
