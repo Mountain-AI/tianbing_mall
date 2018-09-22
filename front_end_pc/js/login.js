@@ -10,8 +10,10 @@ var vm = new Vue({
         remember: false
     },
     methods: {
+
         // 获取url路径参数
         get_query_string: function(name){
+            // 定义一个新的正则表达式
             var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
             var r = window.location.search.substr(1).match(reg);
             if (r != null) {
@@ -85,10 +87,13 @@ var vm = new Vue({
         // qq登录
         qq_login: function(){
             var next = this.get_query_string('next') || '/';
+
             axios.get(this.host + '/oauth/qq/authorization/?next=' + next, {
                     responseType: 'json'
                 })
+
                 .then(response => {
+                    // 跳转到QQAuthURLView类视图的成功响应返回的url,即是get_query_string方法匹配到的next地址
                     location.href = response.data.login_url;
                 })
                 .catch(error => {
