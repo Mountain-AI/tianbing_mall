@@ -27,13 +27,13 @@ class QQAuthURLView(APIView):
         oauth = OAuthQQ(state=next)
         login_url = oauth.get_qq_login_url()
 
-        # 3.返回login_url: https://graph.qq.com/oauth2.0/authorize?next=/  如:user_center_info.html
+        # 3.返回login_url: https://graph.qq.com/oauth2.0/authorize?next=/  如:user_center_info.js
         return Response({"login_url": login_url})
 
 
 class QQAuthUserView(CreateAPIView):
     """
-    qq登录界面跳转后的用户视图
+    qq登录界面跳转后的用户视图:CreateAPIView实现了post方法
     """
     # 指定用于qq登录后跳转的绑定页面创建用户的序列化器
     serializer_class = OAuthQQUserSerializer

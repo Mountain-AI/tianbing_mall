@@ -1,7 +1,8 @@
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -57,11 +58,38 @@ class MobileCountView(APIView):
         return Response(data)
 
 
+class UserDetailView(RetrieveAPIView):
+    """
+    用户的基本信息详情
+    将数据库的信息查询后返回
+    """
+    # 指明自定义的序列化器
+    serializer_class = serializers.UserDetailSerializer
+    # 指明权限必须登录认证后才能访问:接收列表或元组
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """
+        :return: 返回当前请求的用户:源码中get_object方法是从查询集过滤的单一对象
+        """
+        # 重点:类视图对象中可以通过类视图对象的属性获取request(View中在dispatch前封装的有)
+        #   而django中请求request对象中,user属性表明当前请求的用户
+        return self.request.user
 
 
+class EmailView(UpdateAPIView):
+    """
+    用户邮箱验证并更新:UpdateAPIView中封装的有put方法
+    获取emial,校验emial,查询user,更新数据,序列化返回email
+    """
+    # 指明自定义的序列化器
+    serializer_class = serializers.EmailSerializer
+    # 指明权限必须登录认证后才能访问:接收列表或元组
+    permission_classes = [IsAuthenticated]
 
+    def get_object(self):
 
-
+        return self.request.user
 
 
 

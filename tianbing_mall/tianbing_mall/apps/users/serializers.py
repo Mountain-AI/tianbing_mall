@@ -4,6 +4,7 @@ from django_redis import get_redis_connection
 from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
 
+from celery_tasks.email.tasks import send_active_email
 from .models import User
 
 
@@ -122,11 +123,45 @@ class CreateUserSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    """
+    用户基本信息序列化器:
+    只需序列化返回部分信息,无需在添加别的验证方法
+    """
+    class Meta:
+        model = User
+        # 都是read_only???
+        fields = ("id", "username", "mobile", "email", "email_active")
 
 
+class EmailSerializer(serializers.ModelSerializer):
+    """
+    邮箱验证序列化器:
+    校验并返回邮箱;ModelSerializer中封装的有update方法,重写update方法,添加发送邮件的逻辑
+    """
+    class Meta:
+        model = User
+        # 继续要序列又需要反序列
+        fields = ("id", "email")
 
+    def update(self, instance, validated_data):
+        """
+        更新邮箱
+        :param instance: 当前视图get_object时传递的request.user对象
+        :return: 最后将instance对象返回
+        """
+        # 从验证后的数据中获取参数
+        email = validated_data["email"]
+        # 将email保存到数据库
+        instance.email = email
+        instance.save()
 
+        # 生成当前用户专有的验证链接:使用isdangerous根据user对象生成token
+        # 每个用户都有可能验证邮箱,直接在模型类中定义generate_verify_email_url方法
+        url = instance.generate_verify_email_url()
 
+        # 发送激活验证邮件
+        send_active_email.delay(email, url)
 
 
 

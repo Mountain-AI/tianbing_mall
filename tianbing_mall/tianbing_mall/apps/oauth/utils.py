@@ -114,7 +114,7 @@ class OAuthQQ(object):
     @staticmethod
     def check_bind_user_access_token(access_token):
         """
-
+        qq用户存在时校验access_token
         """
         serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
         try:

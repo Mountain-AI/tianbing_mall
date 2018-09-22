@@ -1,7 +1,8 @@
 from celery import Celery
 # 编写celery异步处理发送短信的主要过程
 
-# 为celery使用django配置文件进行设置:celery与manager一样要同时运行,是不同的系统,也要指定配置
+# 为celery使用django配置文件进行设置:
+#       celery与manager一样要同时运行,是不同的系统,也要指定配置
 import os
 if not os.getenv('DJANGO_SETTINGS_MODULE'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'tianbing_mall.settings.dev'
@@ -14,6 +15,6 @@ celery_app = Celery("tianbing")
 celery_app.config_from_object("celery_tasks.config")
 
 # 3,自动注册celery任务
-celery_app.autodiscover_tasks(['celery_tasks.sms'])
+celery_app.autodiscover_tasks(['celery_tasks.sms', "celery_tasks.email"])
 
 
