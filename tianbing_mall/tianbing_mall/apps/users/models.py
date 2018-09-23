@@ -34,8 +34,7 @@ class User(AbstractUser):
         serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
         # 嵌入用户数据,一个就行,两个更好
         data = {"user_id": self.id, "email": self.email}
-        # 将当前用户的字典data转成字符串进行序列化
-        # 为何要再进行转换????
+        # 将
         token = serializer.dumps(data).decode()
 
         # 拼接url

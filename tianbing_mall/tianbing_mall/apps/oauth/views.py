@@ -66,17 +66,20 @@ class QQAuthUserView(CreateAPIView):
             oauth_qq_user = OAuthQQUser.objects.get(openid=openid)
         except OAuthQQUser.DoesNotExist:
             # 如果qq用户数据不存在,则通过openid生成假的access_token并返回
+            # 方法内部使用isdangerous
             access_token = oauth_qq.generate_bind_user_access_token(openid)
             return Response({"access_token": access_token})
         else:
             # 尝试查询成功,表明用户已经绑定过身份,则签发jwt token
-            jwt_payload_handler = api_settings.JWR_PAYLOAD_HANDLER
-            jwt_encode_handler = api_settings.JWR_ENCODE_HANDLER
+            jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+            jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+            # 通过三方表的外键获取当前用户对象
             user = oauth_qq_user.user
             payload = jwt_payload_handler(user)
             token = jwt_encode_handler(payload)
 
-            # 响应数据:登录注册都一样
+            # 响应数据:登录注册都一样:
+            #   以下数据将在Response中放在第一个参数data中,前端通过request.data获取数据
             return Response({
                 "username": user.username,
                 "user_id": user.id,

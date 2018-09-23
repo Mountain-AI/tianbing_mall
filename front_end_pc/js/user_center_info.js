@@ -15,7 +15,7 @@ var vm = new Vue({
         histories: []
     },
     mounted: function(){
-        // 判断用户的登录状态
+        // 页面一加载便向后端请求:判断用户的登录状态
         if (this.user_id && this.token) {
             axios.get(this.host + '/user/', {
                     // 向后端传递JWT token的方法

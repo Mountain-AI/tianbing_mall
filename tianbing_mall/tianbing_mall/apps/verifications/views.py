@@ -22,6 +22,7 @@ from celery_tasks.sms.tasks import send_sms_code
 logger = logging.getLogger('django')
 
 
+# url(r'^image_codes/(?P<image_code_id>[\w-]+)/$', views.ImageCodeView.as_view()),
 class ImageCodeView(APIView):
     """
     图片验证码:仅仅生成验证码,用不到别的功能只需继承APIView
@@ -43,6 +44,7 @@ class ImageCodeView(APIView):
         return HttpResponse(image, content_type="images/jpg")
 
 
+# url(r'^sms_codes/(?P<mobile>1[3-9]\d{9})/$', views.SMSCodeView.as_view()),
 class SMSCodeView(GenericAPIView):
     """
     发送短信验证码:需要使用序列化器或者别的增加的功能需要继承GenericAPIView

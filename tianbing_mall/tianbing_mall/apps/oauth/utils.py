@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 
 from django.conf import settings
-from itsdangerous import TimedJSONWebSignatureSerializer, BadData
+import itsdangerous
 
 from oauth import constants
 from oauth.exceptions import OAuthQQAPIError
@@ -29,7 +29,7 @@ class OAuthQQ(object):
 
     def get_qq_login_url(self):
         """
-        获取qq登录的网址:通过params用urlencode实现动态的从外界传入参数
+        用于被视图函数调用:获取qq登录的网址:通过params用urlencode实现动态的从外界传入参数
         """
         params = {
             "response_type": "code",
@@ -43,10 +43,11 @@ class OAuthQQ(object):
 
     def get_access_token(self, code):
         """
-        接收code,根据code请求qq接口,获取access_token进行返回
+        用于被视图函数调用:接收code,根据code请求qq接口,获取access_token进行返回
         """
         # 指定请求的qq端口
-        url = "http://graph.qq.com/oauth2.0/token?"
+        print("一,前端从qq返回的路径中匹配之后拼接到请求url中的code:", code)
+        url = "https://graph.qq.com/oauth2.0/token?"
         params = {
             "grant_type": "authorization_code",
             "client_id": self.client_id,
@@ -56,7 +57,7 @@ class OAuthQQ(object):
         }
 
         # 将参数params编码成查询字符串格式,并拼接到url
-        url += urllib.parse.urlencode(params)
+        url += urlencode(params)
         # 尝试发送请求
         try:
             # 接受请求返回的响应
@@ -72,9 +73,10 @@ class OAuthQQ(object):
             logger.error("获取access_token异常:%s" % e)
             raise OAuthQQAPIError
         else:
-            # 从解析结果的字典中获得access_token;
+            # 从解析结果的字典中获得access_token;返回的是一个列表
             access_token = resp_dict.get("access_token")
-            # 将获取的token返回
+            print("二,后端通过前端请求url的code再请求qq并从返回内容中通过urllib分析的access_token:", access_token)
+            # 从列表中取出token返回
             return access_token[0]
 
     def get_openid(self, access_token):
@@ -99,16 +101,18 @@ class OAuthQQ(object):
             logger.error("获取openid异常:%s" % e)
         else:
             openid = resp_dict.get("openid")
+            print("三,后端带着qq返回的access_token再次请求qq后对返回内容中通过切片转字典得到openid:", openid)
             return openid
 
     def generate_bind_user_access_token(self, openid):
         """
         qq用户经查询不存在时生成假的token返回
         """
-        # 使用isdangerous的序列化器:接收2个参数
-        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
-        # 固定用法
+        # 使用isdangerous的序列化器:接收2个参数(密钥,有效期)
+        serializer = itsdangerous.TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
+        # 固定用法:返回bytes类型数据
         token = serializer.dumps({"openid": openid})
+        # 解码成字符串返回
         return token.decode()
 
     @staticmethod
@@ -116,10 +120,10 @@ class OAuthQQ(object):
         """
         qq用户存在时校验access_token
         """
-        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
+        serializer = itsdangerous.TimedJSONWebSignatureSerializer(settings.SECRET_KEY, constants.BIND_USER_ACCESS_TOKEN_EXPIRES)
         try:
             data = serializer.loads(access_token)
-        except BadData:
+        except itsdangerous.BadData:
             return None
         else:
             print(data)

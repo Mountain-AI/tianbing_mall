@@ -97,7 +97,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         del validated_data['sms_code']
         del validated_data['allow']
 
-        print("用户登录validated_data:", validated_data)
+        # print("用户登录validated_data:", validated_data)
 
         # 两者写法的区别在于:
         #   调用不同:一个是数据库原生管理类,一个是父类CreateModelMixin;

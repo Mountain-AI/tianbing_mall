@@ -14,6 +14,7 @@ from . import serializers
 from users.models import User
 
 
+# url(r'^users/$', views.UserView.as_view()),
 class UserView(CreateAPIView):
     """
     用户注册:url(r"^users/$", views.UserView.as_view())
@@ -59,10 +60,12 @@ class MobileCountView(APIView):
         return Response(data)
 
 
+# url(r'^user/$', views.UserDetailView.as_view()),
 class UserDetailView(RetrieveAPIView):
     """
     用户的基本信息详情
-    将数据库的信息查询后返回
+    RetrieveAPIView提供get方法:
+        将数据库的信息序列化后包裹在Response的data中返回
     """
     # 指明自定义的序列化器
     serializer_class = serializers.UserDetailSerializer
@@ -78,6 +81,7 @@ class UserDetailView(RetrieveAPIView):
         return self.request.user
 
 
+# url(r'^email/$', views.EmailView.as_view()),
 class EmailView(UpdateAPIView):
     """
     用户邮箱验证并更新:UpdateAPIView中封装的有put方法

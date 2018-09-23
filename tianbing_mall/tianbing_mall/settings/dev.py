@@ -29,7 +29,8 @@ SECRET_KEY = '6@z(i$c69u#%g-s=(^-n4pr+8bfs+wle9wt8i&4k_tspr%f=d_'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["api.tianbing.site", "127.0.0.1", "localhost", "www.tianbing.site"]
+# ALLOWED_HOSTS = ["api.tianbing.site", "127.0.0.1", "localhost", "www.tianbing.site"]
+ALLOWED_HOSTS = ["api.meiduo.site", "127.0.0.1", "localhost", "www.meiduo.site"]
 
 
 # Application definition
@@ -236,10 +237,15 @@ AUTH_USER_MODEL = 'users.User'
 
 # CORS跨域白名单:凡是出现在白名单中的域名，都可以访问后端接口
 CORS_ORIGIN_WHITELIST = (
+    # '127.0.0.1:8080',
+    # 'localhost:8080',
+    # 'www.tianbing.site:8080',
+    # 'api.tianbing.site:8000',
+
     '127.0.0.1:8080',
     'localhost:8080',
-    'www.tianbing.site:8080',
-    'api.tianbing.site:8000'
+    'www.meiduo.site:8080',
+    'api.meiduo.site:8000',
 )
 # 跨域允许携带cookie
 CORS_ALLOW_CREDENTIALS = True
