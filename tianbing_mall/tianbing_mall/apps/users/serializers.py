@@ -137,7 +137,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 class EmailSerializer(serializers.ModelSerializer):
     """
     邮箱验证序列化器:
-    校验并返回邮箱;ModelSerializer中封装的有update方法,重写update方法,添加发送邮件的逻辑
+    校验并返回邮箱;ModelSerializer中封装的有2中save方法:update和create,
+        重写update方法,添加发送邮件的逻辑
     """
     class Meta:
         model = User
@@ -152,7 +153,7 @@ class EmailSerializer(serializers.ModelSerializer):
         """
         # 从验证后的数据中获取参数
         email = validated_data["email"]
-        # 将email保存到数据库
+        # 重点:在生成邮箱验证url之前将email保存进数据库中:因为生成url需要从对象中获取url
         instance.email = email
         instance.save()
 

@@ -44,7 +44,8 @@
             // 也可以是mounted:function(){}    区别是created更早加载
 
             created: function(){
-                // location.search就是路径中?之后的查询字符串,包括?
+                // location.search就是路径中问号(包括?)之后的查询字符串:即token(使用itsdangerous生成的包含user_id和email)
+                // verify_url = "http://www.tianbing.site:8080/success_verify_email.html?token=" + token
                 axios.get(this.host+'/emails/verification/'+ document.location.search)
                     .then(response => {
                         this.success = true;

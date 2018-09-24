@@ -78,6 +78,7 @@ class UserDetailView(RetrieveAPIView):
         """
         # 重点:类视图对象中可以通过类视图对象的属性获取request(View中在dispatch前封装的有)
         #   而django中请求request对象中,user属性表明当前请求的用户
+        # 因为请求url中没有用户<pk>,因此可以从当前请求对象中获取当前用户对象
         return self.request.user
 
 
@@ -108,6 +109,7 @@ class VerifyEmailView(APIView):
         """
         # 从url查询字符串中获取token
         token = request.query_params.get("token")
+        print("用户从邮箱url中跳转到验证链接时在界面created加载之前发送请求通过url传递的token:", token)
         if not token:
             return Response({"message": "缺少token"}, status=status.HTTP_400_BAD_REQUEST)
         # 通过在User模型类自定义的静态方法验证token,验证成功会返回当前用户对象

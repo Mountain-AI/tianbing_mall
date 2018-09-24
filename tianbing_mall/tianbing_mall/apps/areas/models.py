@@ -5,7 +5,7 @@ from django.db import models
 
 class Area(models.Model):
     """
-    行政区划:城市三级联动
+    行政区划:城市三级联动,用户为添加用户地址信息提供数据
     """
     name = models.CharField(max_length=20, verbose_name="名称", )
     # django中设置外键,自关联用self表示自身,而不是模型类名;on_delete设置为空;
@@ -22,6 +22,7 @@ class Area(models.Model):
     def __str__(self):
         """"""
         return self.name
+
 
 
 
