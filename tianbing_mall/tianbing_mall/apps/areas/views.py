@@ -14,8 +14,12 @@ from areas.models import Area
 class AreasViewSet(CacheResponseMixin, ReadOnlyModelViewSet):
     """
     个人中心地址:提供行政区划列表和详情信息;
-    继承关系:ReadOnlyModelViewSet实现了retrieve和list方法,继承了:
-            RetrieveModelMixin,ListModelMixin,GenericViewSet
+    继承关系:1,CacheResponseMixin是配置的缓存扩展
+            2,ReadOnlyModelViewSet实现了retrieve和list方法,继承了:
+                RetrieveModelMixin,ListModelMixin,GenericViewSet
+    CacheResponseMixin做的事:
+            1,给RetrieveModelMixin,ListModelMixin提供的retrieve和list方法添加cache_response装饰器
+            2,是对两个方法返回的分页过的数据进行缓存
     """
     # 不需要分页时进行关闭分页处理
     pagination_class = None

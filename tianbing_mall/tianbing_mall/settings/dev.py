@@ -267,7 +267,7 @@ EMAIL_HOST_PASSWORD = 'tianbing163'
 # 收件人看到的发件人
 EMAIL_FROM = '天冰商城<tianbing_admin@163.com>'
 
-# DRF - extensions扩展
+# DRF -extensions缓存扩展
 REST_FRAMEWORK_EXTENSIONS = {
     # 缓存时间:设为1小时
     'DEFAULT_CACHE_RESPONSE_TIMEOUT': 60 * 60,

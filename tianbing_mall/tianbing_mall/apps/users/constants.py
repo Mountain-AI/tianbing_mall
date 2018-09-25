@@ -1,2 +1,5 @@
-# 激活邮件有效期
+# 激活邮件有效期,s
 BIND_USER_ACCESS_TOKEN_EXPIRES = 24*60*60
+
+# 用户地址总数限制数量
+USER_ADDRESS_COUNTS_LIMIT = 20

@@ -72,7 +72,6 @@ class User(AbstractUser):
                 return user
 
 
-
 class Address(BaseModel):
     """
     个人中心用户收获地址信息:此是一张三方关系表,在User模型类中default_address字段关联次模型
@@ -87,6 +86,7 @@ class Address(BaseModel):
     province = models.ForeignKey("areas.Area", on_delete=models.PROTECT, related_name="province_addresses", verbose_name="省")
     city = models.ForeignKey("areas.Area", on_delete=models.PROTECT, related_name="city_addresses", verbose_name="市")
     district = models.ForeignKey('areas.Area', on_delete=models.PROTECT, related_name='district_addresses', verbose_name='区')
+
     place = models.CharField(max_length=50, verbose_name='地址')
     mobile = models.CharField(max_length=11, verbose_name='手机')
     # 固定电话电话,允许为空/空白

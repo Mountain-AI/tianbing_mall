@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
 
 from celery_tasks.email.tasks import send_active_email
-from .models import User
+from .models import User, Address
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -166,10 +166,49 @@ class EmailSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserAddressSerializer(serializers.ModelSerializer):
+    """
+    用户地址序列化器
+    """
+    # 重写以下三个外键字段:将原来默认生成的ForeignkeyRelatedField改写为StringRelatedField
+    #                      仅用于序列化
+    province = serializers.StringRelatedField(read_only=True)
+    city = serializers.StringRelatedField(read_only=True)
+    district = serializers.StringRelatedField(read_only=True)
+    # 以下三个字段用于校验前端发送的和返回给前端的
+    province_id = serializers.IntegerField(label='省ID', required=True)
+    city_id = serializers.IntegerField(label='市ID', required=True)
+    district_id = serializers.IntegerField(label='区ID', required=True)
+
+    class Meta:
+        model = Address
+        # 排除字段:user不需要接收,可直接从contex属性中读取request获取user
+        exclude = ('user', 'is_deleted', 'create_time', 'update_time')
+
+    def validate_mobile(self, value):
+        """
+        验证手机号
+        """
+        if not re.match(r'^1[3-9]\d{9}$', value):
+            raise serializers.ValidationError('手机号格式错误')
+        return value
+
+    def create(self, validated_data):
+        """
+        保存
+        """
+        # 在调用父类创建方法之前将user添加进验证过的数据中
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
 
-
-
+class AddressTitleSerializer(serializers.ModelSerializer):
+    """
+    地址标题
+    """
+    class Meta:
+        model = Address
+        fields = ('title',)
 
 
 
