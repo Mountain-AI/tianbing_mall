@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'verifications.apps.VerificationsConfig',
     'oauth.apps.OauthConfig',  # 注册qq登录应用
     'areas.apps.AreasConfig',  # 收货地址应用
+    'goods.apps.GoodsConfig',
+    'contents.apps.ContentsConfig',
 
 ]
 
