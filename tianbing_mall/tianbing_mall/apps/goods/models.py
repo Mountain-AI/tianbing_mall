@@ -1,4 +1,5 @@
-
+from ckeditor.fields import RichTextField
+from ckeditor_uploader.fields import RichTextUploadingField
 from django.db import models
 
 # Create your models here.
@@ -67,6 +68,12 @@ class Goods(BaseModel):
     category3 = models.ForeignKey(GoodsCategory, on_delete=models.PROTECT, related_name='cat3_goods', verbose_name='三级类别')
     sales = models.IntegerField(default=0, verbose_name='销量')
     comments = models.IntegerField(default=0, verbose_name='评价数')
+    # 增加支持上传的富文本字段:详情
+    desc_detail = RichTextUploadingField(default='', verbose_name='详细介绍')
+    # 增加不支持上传的富文本字段:包装
+    desc_pack = RichTextField(default='', verbose_name='包装信息')
+    # 服务
+    desc_service = RichTextUploadingField(default='', verbose_name='售后服务')
 
     class Meta:
         db_table = 'tb_goods'
