@@ -5,6 +5,8 @@ from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
 
 from celery_tasks.email.tasks import send_active_email
+from goods.models import SKU
+from users import constants
 from .models import User, Address
 
 
@@ -209,6 +211,77 @@ class AddressTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ('title',)
+
+
+class AddUserBrowsingHistorySerializer(serializers.Serializer):
+    """
+    当用户打开商品详情页则添加当前商品的sku_id保存到redis
+    当用户进入个人中心则根据redis的sku_id从数据库中查询具体的商品对象,返回序列化后的数据
+    """
+    # 定义序列化字段:最小值为1
+    # 要点:id是SKU表的自增字段,默认read_only,不能反序列,则不用模型类序列化器
+    sku_id = serializers.IntegerField(label="商品SKU编号", min_value=1)
+
+    def validate_sku_id(self, attrs):
+        """
+        定义校验规则:检查数据表中是否存在此id
+        :param attrs: 接收的字段值
+        :return: 将attrs返回
+        """
+        # 尝试获取当前数据表:不存在数据则抛出异常
+        try:
+            SKU.objects.get(id=attrs)
+        except SKU.DoesNotExist:
+            raise serializers.ValidationError
+        return attrs
+
+    def create(self, validated_data):
+        """
+        重写CreateAPIView的create方法:实现将校验过后的sku_id保存在redis
+        """
+        # 根据用户id进行区分,保存在redis:当前用户保存在当前序列化器的contex中的request中
+        user_id = self.context["request"].user.id
+
+        # 从传递进来的数据中取出sku_id
+        sku_id = validated_data["sku_id"]
+
+        # 创建redis连接对象:传递dev配置定义的redis名字history
+        redis_conn = get_redis_connection("history")
+        # 创建管道pipline对象:进行对此操作
+        pl = redis_conn.pipline()
+
+        # 添加前先移除已存在的sku_id:浏览记录的商品具有唯一性,不能重复;lrem key count value:count=0代表全部删除
+        # key即是保存时的history_user_id
+        pl.lrem("history_%s" % user_id, 0, sku_id)
+
+        # 添加sku_id:lpush key value [value ...]
+        pl.lpush("history_%s" % user_id, sku_id)
+
+        # 只保存最多5条数据:方便前端展示:ltrim key start stop
+        # 0,1,2,3,4
+        pl.ltrim("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT-1)
+        # 执行管道任务
+        pl.execute()
+
+        # 将接收的参数返回
+        return validated_data
+
+
+class SKUSerializer(serializers.ModelSerializer):
+    """仅仅用于序列化模型类数据"""
+
+    class Meta:
+        model = SKU
+        fields = ("id", "name", "price", "default_image_url", "comments")
+
+
+
+
+
+
+
+
+
 
 
 

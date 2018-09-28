@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from django_redis import get_redis_connection
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
@@ -9,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from goods.models import SKU
 from users import constants
 from . import serializers
 
@@ -212,6 +214,40 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         return Response(serializer.data)
 
 
+class UserBrowserHistoryView(CreateAPIView):
+    """
+    用户浏览记录:继承CreateAPIView:post添加浏览记录;
+    """
+    serializer_class = serializers.AddUserBrowsingHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        查询数据库浏览历史记录:根据redis存的sku_id查询数据库取出sku对象,再进行序列化校验
+        :return:将序列化之后的id, name, price, default_image_url, comments用于个人中心显示
+        """
+        # user_id
+        user_id = request.user.id
+
+        # 查询redis, 获取连接对象
+        redis_conn = get_redis_connection("history")
+        # 重点:根据user_id进行查询sku_id:str和hash取值通过get;list类型通过lrange key start stop
+        # 返回的是一个sku_id的数字列表
+        sku_id_list = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT-1)
+        # 通过从redis查询的sku_id_list遍历查询对象
+        # 重点:此处不能使用过滤查询中的范围in,因为用范围查到的结果是无序的,需要挨个遍历
+        skus = []
+        for sku_id in sku_id_list:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append(sku)
+
+        # 将skus列表中的对象进行序列化返回:即使将对象的属性转换成字典
+        serializer = serializers.SKUSerializer(skus, many=True)
+
+        # 将序列化后的数据返回:
+        # HttpResponse和Response的区别:DRF提供的Response(其继承自HttpResponse)，提供了渲染器render对数据进行渲染，数据必须是字典;
+        # 而HttpResponse不会进行加以渲染，指定content_type即可直接将图片对象返回
+        return Response(serializer.data)
 
 
 
