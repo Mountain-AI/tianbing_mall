@@ -15,11 +15,11 @@ import os
 if not os.getenv("DJANGO_SETTINGS_MODULE"):
     os.environ["DJANGO_SETTINGS_MODULE"] = "tianbing_mall.settings.dev"
 
-# 让django初始化配置
+# 让django初始化配置:该有的配置资源均有
 import django
 django.setup()
 
-# 定义任务
+# 定义任务:使用脚本就没有必要使用异步任务了,因此在把方法粘贴过来即可
 from django.template import loader
 from django.conf import settings
 
@@ -29,7 +29,7 @@ from goods.models import SKU
 
 def generate_static_sku_detail_html(sku_id):
     """
-    异步任务:生成静态商品详情页面
+    生成静态商品详情页面
     """
     # 商品分类菜单:自定义生成商品分类方法
     categories = get_categories()
@@ -116,9 +116,10 @@ def generate_static_sku_detail_html(sku_id):
 
 
 if __name__ == '__main__':
+    # 使用脚本需要传递sku_id
     skus = SKU.objects.all()
     for sku in skus:
-        print(sku.id)
+        print(sku.id)  # 终端验证生成了16个详情html
         generate_static_sku_detail_html(sku.id)
 
 

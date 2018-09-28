@@ -17,6 +17,7 @@ var vm = new Vue({
         sku_price: price,
         cart_total_count: 0, // 购物车总数量
         cart: [], // 购物车数据
+
         hots: [], // 热销商品
         cat: cat, // 商品类别
         comments: [], // 评论信息

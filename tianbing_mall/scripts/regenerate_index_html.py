@@ -7,9 +7,10 @@ import sys
 
 import os
 
-# 添加系统导包路径
+# 添加系统导包相对路径:为了能够导入tianbing_mall.settings.dev
 sys.path.insert(0, "../")
-# 默认使用当天django的配置
+
+# 指定默认使用当天django的配置
 if not os.getenv("DJANGO_SETTINGS_MODULE"):
     os.environ["DJANGO_SETTINGS_MODULE"] = "tianbing_mall.settings.dev"
 
