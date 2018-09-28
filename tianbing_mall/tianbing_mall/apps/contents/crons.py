@@ -12,10 +12,11 @@ from goods.models import GoodsChannel
 
 def generate_static_index_html():
     """
-    此函数作用:动态的生成主页静态的html文件
+    此函数作用:用于crontab定时任务调用,动态的生成index主页静态的html文件
     """
+    # 在终端输出的信息将会在crontab定时任务中输出到任务日志中
     print("%s: generate_static_index_html" % time.ctime())
-    # ???
+    # 引入有序字典:可以通过存入顺序进行排序
     categories = OrderedDict()
     channels = GoodsChannel.objects.order_by("group_id", "sequence")
 

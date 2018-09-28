@@ -1,19 +1,37 @@
+#!/usr/bin/env python
+
+
+"""
+脚本功能:手动生成所有SKU的静态detail html文件
+"""
+
+import sys
+
+# 增加导包路径
+sys.path.insert(0, "../")
+
+# 默认使用当前项目的django配置
 import os
+if not os.getenv("DJANGO_SETTINGS_MODULE"):
+    os.environ["DJANGO_SETTINGS_MODULE"] = "tianbing_mall.settings.dev"
 
-from django.conf import settings
+# 让django初始化配置
+import django
+django.setup()
+
+# 定义任务
 from django.template import loader
+from django.conf import settings
 
-from celery_tasks.main import celery_app
-from goods.models import SKU
 from goods.utils import get_categories
+from goods.models import SKU
 
 
-@celery_app.task(name="generate_static_sku_detail_html")
 def generate_static_sku_detail_html(sku_id):
     """
-    异步任务:当admin保存时,生成静态商品detail详情页面:
+    异步任务:生成静态商品详情页面
     """
-    # 获取商品分类菜单:自定义生成商品分类方法
+    # 商品分类菜单:自定义生成商品分类方法
     categories = get_categories()
 
     # 获取当前sku信息
@@ -48,22 +66,24 @@ def generate_static_sku_detail_html(sku_id):
         # 用于形成规格参数-sku字典的键
         key = []
         for spec in s_specs:
-            #
+            # ????
             key.append(spec.option.id)
         # 向规格参数-sku字典添加记录
         spec_sku_map[tuple(key)] = s.id
 
     # 获取当前商品的规格信息
-    # specs = [
-    #    {
-    #        'name': '屏幕尺寸',
-    #        'options': [
-    #            {'value': '13.3寸', 'sku_id': xxx},
-    #            {'value': '15.4寸', 'sku_id': xxx},
-    #        ]
-    #    },
-    #    ...
-    #]
+    """
+    specs = [
+       {
+           'name': '屏幕尺寸',
+           'options': [
+               {'value': '13.3寸', 'sku_id': xxx},
+               {'value': '15.4寸', 'sku_id': xxx},
+           ]
+       },
+       ...
+    ]
+    """
     specs = goods.goodsspecification_set.order_by('id')
     # 若当前sku的规格信息不完整，则不再继续
     if len(sku_key) < len(specs):
@@ -82,30 +102,24 @@ def generate_static_sku_detail_html(sku_id):
 
     # 渲染模板，生成静态html文件
     context = {
-        # 商品分类菜单
         'categories': categories,
-        # 面包屑导航频道信息
         'goods': goods,
-        # 当前商品的规格信息
         'specs': specs,
-        # 当前sku信息
         'sku': sku
     }
 
     template = loader.get_template('detail.html')
     html_text = template.render(context)
-
-    file_path = os.path.join(
-        settings.GENERATED_STATIC_HTML_FILES_DIR, 'goods/'+str(sku_id)+'.html')
+    file_path = os.path.join(settings.GENERATED_STATIC_HTML_FILES_DIR, 'goods/'+str(sku_id)+'.html')
     with open(file_path, 'w') as f:
         f.write(html_text)
 
 
-
-
-
-
-
+if __name__ == '__main__':
+    skus = SKU.objects.all()
+    for sku in skus:
+        print(sku.id)
+        generate_static_sku_detail_html(sku.id)
 
 
 

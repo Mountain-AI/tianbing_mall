@@ -5,6 +5,7 @@ from goods.models import GoodsChannel
 
 def get_categories():
     """获取商品分类菜单并返回分类的字典信息"""
+    # 引入有序字典
     categories = OrderedDict()
     channels = GoodsChannel.objects.order_by("group_id", "sequence")
 
@@ -15,7 +16,7 @@ def get_categories():
             categories[group_id] = {"channels": [], "sub_cats": []}
         # 当前频道的类别
         cat1 = channel.category
-        # 追加当前频道:????
+        # 追加当前频道
         categories[group_id]["channels"].append({
             'id': cat1.id,
             'name': cat1.name,
@@ -24,7 +25,7 @@ def get_categories():
         # 构建当前类别的子类别
         for cat2 in cat1.goodscategory_set.all():
             cat2.sub_cats = []
-            # goodscategory_set??
+            # 关联查询
             for cat3 in cat2.goodscategory_set.all():
                 cat2.sub_cats.append(cat3)
             categories[group_id]["sub_cats"].append(cat2)
