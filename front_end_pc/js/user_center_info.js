@@ -31,6 +31,25 @@ var vm = new Vue({
                     this.mobile = response.data.mobile;
                     this.email = response.data.email;
                     this.email_active = response.data.email_active;
+
+                    // 用户已登录,则补充请求浏览历史
+                    axios.get(this.host + '/browse_histories/', {
+                            headers: {
+                                // 携带JWT token
+                                'Authorization': 'JWT ' + this.token
+                            },
+                            responseType: 'json'
+                        })
+
+                        // 请求成功则给history赋值数据,
+                        .then(response => {
+                            this.histories = response.data;
+                            // 此时history是一个字典,{"id": ""}
+                            for(var i=0; i<this.histories.length; i++){
+                                this.histories[i].url = '/goods/' + this.histories[i].id + '.html';
+                            }
+                        })
+
                 })
                 .catch(error => {
                     if (error.response.status==401 || error.response.status==403) {

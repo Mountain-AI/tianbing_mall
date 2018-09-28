@@ -41,6 +41,7 @@ def generate_static_sku_detail_html(sku_id):
     #     (规格1参数id, 规格2参数id, 规格3参数id, ...): sku_id,
     #     ...
     # }
+
     spec_sku_map = {}
     for s in skus:
         # 获取sku规格参数

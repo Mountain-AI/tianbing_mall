@@ -86,8 +86,9 @@
                         </ul>
                 </div>
 
-                <h3 class="common_title2">最近浏览</h3>
-                <div class="has_view_list">
+        <!--
+            <h3 class="common_title2">最近浏览</h3>
+            <div class="has_view_list">
                     <ul class="goods_type_list clearfix">
                 <li>
                     <a href="detail.html"><img src="images/goods/goods003.jpg"></a>
@@ -139,8 +140,24 @@
                     </div>
                 </li>
             </ul>
-        </div>
             </div>
+        -->
+            <h3 class="common_title2">最近浏览</h3>
+            <div class="has_view_list">
+                <ul class="goods_type_list clearfix">
+
+                    <li v-for="sku in histories">
+                    <a :href="sku.url"><img :src="sku.default_image_url"></a>
+                    <h4><a :href="sku.url">{{sku.name}}</a></h4>
+                    <div class="operate">
+                        <span class="prize">￥{{sku.price}}</span>
+                        <span class="unit">{{sku.comments}}评价</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
     </div>
     <div class="footer">
         <div class="foot_link">

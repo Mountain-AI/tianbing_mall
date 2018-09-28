@@ -247,8 +247,8 @@ class AddUserBrowsingHistorySerializer(serializers.Serializer):
 
         # 创建redis连接对象:传递dev配置定义的redis名字history
         redis_conn = get_redis_connection("history")
-        # 创建管道pipline对象:进行对此操作
-        pl = redis_conn.pipline()
+        # 创建管道pipeline对象:进行对此操作
+        pl = redis_conn.pipeline()
 
         # 添加前先移除已存在的sku_id:浏览记录的商品具有唯一性,不能重复;lrem key count value:count=0代表全部删除
         # key即是保存时的history_user_id
