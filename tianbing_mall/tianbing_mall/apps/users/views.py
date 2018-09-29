@@ -273,6 +273,3 @@ class UserBrowserHistoryView(CreateAPIView):
 
 
 
-
-
-

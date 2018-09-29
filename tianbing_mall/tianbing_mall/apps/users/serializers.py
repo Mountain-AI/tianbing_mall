@@ -275,19 +275,3 @@ class SKUSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "price", "default_image_url", "comments")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

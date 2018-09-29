@@ -24,11 +24,12 @@ def generate_static_index_html():
         # 当前组
         group_id = channel.group_id
         if group_id not in categories:
+            # 商品频道的分组保存进有序字典,并指定对应的字典键
             categories[group_id] = {"channels": [], "sub_cats": []}
         # 当前频道的类别
         cat1 = channel.category
         
-        # 追加当前频道:categories={"group_id":{"channels": [{"id":cat1.id, "name": cat..}]}, }
+        # 追加当前频道的分组添加数据:categories={"group_id":{"channels": [{"id":cat1.id, "name": cat..}]}, }
         categories[group_id]["channels"].append({
             'id': cat1.id,
             'name': cat1.name,
@@ -38,7 +39,7 @@ def generate_static_index_html():
         # 构建当前类别的子类别
         for cat2 in cat1.goodscategory_set.all():
             cat2.sub_cats = []
-            # 
+            # 关联查询
             for cat3 in cat2.goodscategory_set.all():
                 cat2.sub_cats.append(cat3)
             categories[group_id]["sub_cats"].append(cat2)
