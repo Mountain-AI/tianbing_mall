@@ -6,20 +6,16 @@ var vm = new Vue({
         username: sessionStorage.username || localStorage.username,
         user_id: sessionStorage.user_id || localStorage.user_id,
         token: sessionStorage.token || localStorage.token,
-        cat: '', // 当前商品类别
         page: 1, // 当前页数
-        page_size: 5, // 每页数量
-        ordering: '-create_time', // 排序
+        page_size: 6, // 每页数量
         count: 0,  // 总数量
+
         skus: [], // 数据
-        cat1: {url: '', category:{name:'', id:''}},  // 一级类别
-        cat2: {name:''},  // 二级类别
-        cat3: {name:''},  // 三级类别,
+        query: '',  // 查询关键字
         cart_total_count: 0, // 购物车总数量
         cart: [], // 购物车数据
-        hots: [], // 热销商品
     },
-    // 计算属性
+
     computed: {
         total_page: function(){  // 总页数
             return Math.ceil(this.count/this.page_size);
@@ -35,11 +31,9 @@ var vm = new Vue({
             if (this.page <= 0 ) {
                 return 0;
             } else {
-                // 加以越界判断
                 return this.page - 1;
             }
         },
-        // 实现当前显示的页数始终在页码中间
         page_nums: function(){  // 页码
             // 分页页数显示计算
             // 1.如果总页数<=5
@@ -66,25 +60,13 @@ var vm = new Vue({
         }
     },
     mounted: function(){
-        // 页面加载前获取url中的cat参数
-        this.cat = this.get_query_string('cat');
-        // 请求该cat的商品数据
-        this.get_skus();
-        axios.get(this.host+'/categories/'+this.cat+'/', {
-                responseType:'json'
-            })
-            .then(response => {
-                this.cat1 = response.data.cat1;
-                this.cat2 = response.data.cat2;
-                this.cat3 = response.data.cat3;
-            })
-            .catch(error => {
-                console.log(error.response.data)
-            });
+        // 页面加载之前:1,获取查询参数q;2,请求后端搜索结果;3,获取购物车数据
+        this.query = this.get_query_string('q');
+        this.get_search_result();
         this.get_cart();
-        this.get_hot_goods();
     },
     methods: {
+        // 登出
         logout(){
             sessionStorage.clear();
             localStorage.clear();
@@ -99,14 +81,14 @@ var vm = new Vue({
             }
             return null;
         },
-        // 请求商品数据
-        get_skus: function(){
-            axios.get(this.host+'/categories/'+this.cat+'/skus/', {
-                    // axios会将第二个参数中的params中的字典数据转换成查询字符串拼接到url
+
+        // 请求查询结果
+        get_search_result: function(){
+            axios.get(this.host+'/skus/search/', {
                     params: {
+                        text: this.query,
                         page: this.page,
                         page_size: this.page_size,
-                        ordering: this.ordering
                     },
                     responseType: 'json'
                 })
@@ -115,6 +97,7 @@ var vm = new Vue({
                     this.count = response.data.count;
                     this.skus = response.data.results;
                     for(var i=0; i<this.skus.length; i++){
+                        // skus是一个字典列表:保存商品对象的数据
                         this.skus[i].url = '/goods/' + this.skus[i].id + ".html";
                     }
                 })
@@ -122,59 +105,18 @@ var vm = new Vue({
                     console.log(error.response.data);
                 })
         },
+
         // 点击页数
         on_page: function(num){
             if (num != this.page){
+                // 点击页数时,将改变页码进行请求
                 this.page = num;
-                this.get_skus();
-            }
-        },
-        // 点击排序
-        on_sort: function(ordering){
-            if (ordering != this.ordering) {
-                this.page = 1;
-                this.ordering = ordering;
-                this.get_skus();
+                this.get_search_result();
             }
         },
         // 获取购物车数据
         get_cart: function(){
-            axios.get(this.host+'/cart/', {
-                    headers: {
-                        'Authorization': 'JWT ' + this.token
-                    },
-                    responseType: 'json',
-                    withCredentials: true
-                })
-                .then(response => {
-                    this.cart = response.data;
-                    this.cart_total_count = 0;
-                    for(var i=0;i<this.cart.length;i++){
-                        if (this.cart[i].name.length>25){
-                            this.cart[i].name = this.cart[i].name.substring(0, 25) + '...';
-                        }
-                        this.cart_total_count += this.cart[i].count;
 
-                    }
-                })
-                .catch(error => {
-                    console.log(error.response.data);
-                })
-        },
-        // 获取热销商品数据
-        get_hot_goods: function(){
-            axios.get(this.host+'/categories/'+this.cat+'/hotskus/', {
-                    responseType: 'json'
-                })
-                .then(response => {
-                    this.hots = response.data;
-                    for(var i=0; i<this.hots.length; i++){
-                        this.hots[i].url = '/goods/' + this.hots[i].id + '.html';
-                    }
-                })
-                .catch(error => {
-                    console.log(error.response.data);
-                })
         }
     }
 });
