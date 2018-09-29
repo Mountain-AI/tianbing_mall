@@ -44,7 +44,7 @@ var vm = new Vue({
                         // 请求成功则给history赋值数据,
                         .then(response => {
                             this.histories = response.data;
-                            // 此时history是一个字典,{"id": ""}
+                            // 此时history是一个字典列表,[{"url": "..."}, {"":""}]
                             for(var i=0; i<this.histories.length; i++){
                                 this.histories[i].url = '/goods/' + this.histories[i].id + '.html';
                             }

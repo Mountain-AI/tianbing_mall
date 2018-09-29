@@ -230,6 +230,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+    # 配置全局默认分页
+    "DEFAULT_PAGINATION_CLASS": "tianbing_mall.utils.pagination.StandardResultsSetPagination",
+
 }
 
 # JWT有效期
