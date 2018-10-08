@@ -303,9 +303,11 @@
             <!--<div v-if="skus.length==0"><p>暂时没有商品。</p></div>-->
 
             <div class="pagenation">
-                <a v-show="previous" @click="on_page(previous)">上一页</a>
-                <a v-for="num in page_nums" @click="on_page(num)" :class="num==page?'active':''">[[num]]</a>
-                <a v-show="next" @click="on_page(next)">下一页></a>
+
+                <!--当点击时调用on_page方法同时传递参数-->
+                <a v-show="previous" @click="on_page(previous)" href="javascript:;">上一页</a>
+                <a v-for="num in page_nums" @click="on_page(num)" :class="num==page?'active':''" href="javascript:;">[[num]]</a>
+                <a v-show="next" @click="on_page(next)" href="javascript:;">下一页></a>
             </div>
         </div>
     </div>

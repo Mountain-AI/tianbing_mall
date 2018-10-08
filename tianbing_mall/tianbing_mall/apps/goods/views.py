@@ -18,7 +18,7 @@ from goods.serializers import SKUSerializer
 class SKUListView(ListAPIView):
     """
     SKU商品列表视图:
-            对商品数据进行分页,并实现按照create(默认),price,sales排序
+            对商品数据进行[分页],并[排序]:create(默认),price,sales
     :return:1,序列器实现:"id", "name", "price", "default_image_url", "comments"
             2,分页时django默认返回:count	next previous results
     """

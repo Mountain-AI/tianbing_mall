@@ -122,10 +122,12 @@ var vm = new Vue({
                     console.log(error.response.data);
                 })
         },
+
         // 点击页数
         on_page: function(num){
             if (num != this.page){
                 this.page = num;
+                // 点击的是个a标签,
                 this.get_skus();
             }
         },

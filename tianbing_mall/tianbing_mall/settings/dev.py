@@ -135,7 +135,14 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
-    }
+    },
+    "cart": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -333,7 +340,7 @@ HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
         # 此处为elasticsearch运行的服务器ip地址，端口号固定为9200
-        'URL': 'http://192.168.32.128:9200/',
+        'URL': 'http://192.168.31.128:9200/',
         # 指定elasticsearch建立的索引库的名称
         'INDEX_NAME': 'tianbing',
     },

@@ -89,7 +89,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        重写保存用户的方法:增加密码加密之后再保存
+        重写保存用户的方法:密码加密之后再保存
         密码加密的两种途径:
             1,创建对象,通过对象的set_password(validated_data["password"]),在对象.save()
             2,
