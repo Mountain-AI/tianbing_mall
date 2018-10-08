@@ -58,22 +58,22 @@
 
             <ul class="cart_goods_show">
                 <li>
-                    <img src="images/goods/goods001.jpg" alt="商品图片">
+                    <img src="../images/goods/goods001.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>4</div>
                 </li>
                 <li>
-                    <img src="images/goods/goods002.jpg" alt="商品图片">
+                    <img src="../images/goods/goods002.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>5</div>
                 </li>
                 <li>
-                    <img src="images/goods/goods003.jpg" alt="商品图片">
+                    <img src="../images/goods/goods003.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>6</div>
                 </li>
                 <li>
-                    <img src="images/goods/goods003.jpg" alt="商品图片">
+                    <img src="../images/goods/goods003.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>6</div>
                 </li>
@@ -1664,7 +1664,7 @@
             </div>
 
     <div class="breadcrumb">
-        <a href="">手机</a>
+        <a href="http://shouji.jd.com">手机</a>
         <span>></span>
         <span>手机通讯</span>
         <span>></span>
@@ -1683,9 +1683,11 @@
             <div class="goods_num clearfix">
                 <div class="num_name fl">数 量：</div>
                 <div class="num_add fl">
+
                     <input v-model="sku_count" type="text" class="num_show fl">
-                    <a @click="sku_count++" class="add fr">+</a>
-                    <a @click="on_minus()" class="minus fr">-</a>
+                    <a @click="on_minus()" class="minus fr" href="javascript:;">-</a>
+                    <a @click="sku_count++" class="add fr" href="javascript:;">+</a>
+
                 </div>
             </div>
             

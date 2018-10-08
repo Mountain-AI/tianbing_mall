@@ -40,8 +40,9 @@ def generate_static_sku_detail_html(sku_id):
     sku.images = sku.skuimage_set.all()
 
     # 面包屑导航信息中的频道
-    goods = sku.goods
-    goods.channel = goods.category1.goodschannel_set.all()
+    goods = sku.goods  # 即是SPU表
+    # 根据分类查询所属频道,第一个元素
+    goods.channel = goods.category1.goodschannel_set.all()[0]
 
     # 构建当前商品的规格链接
     # sku_key = [规格1参数id, 规格2参数id, ....]
@@ -103,8 +104,8 @@ def generate_static_sku_detail_html(sku_id):
     # 渲染模板，生成静态html文件
     context = {
         'categories': categories,
-        'goods': goods,
-        'specs': specs,
+        'goods': goods,  #
+        'specs': specs,  # 规格
         'sku': sku
     }
 

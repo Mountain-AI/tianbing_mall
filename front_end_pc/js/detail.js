@@ -36,6 +36,7 @@ var vm = new Vue({
     },
     mounted: function(){
 
+        // this.get_cart()
         // 添加用户浏览历史记录
         this.get_sku_id();
         // 用户已经登录则添加记录,用户不存在则不添加
