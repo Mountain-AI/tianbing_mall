@@ -4,12 +4,13 @@ from django.shortcuts import render
 
 # Create your views here.
 from django_redis import get_redis_connection
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 import base64
 
 from carts import constants
-from carts.serializers import CartSerializer, CartSKUSerializer
+from carts.serializers import CartSerializer, CartSKUSerializer, CartDeleteSerializer
 
 # /cart/  接收参数:sku_id,count
 from goods.models import SKU
@@ -202,7 +203,7 @@ class CartView(GenericAPIView):
             redis_conn = get_redis_connection('cart')
             pl = redis_conn.pipeline()
 
-            # 处理数量 hash
+            # 处理(更新)数量 hash
             pl.hset('cart_%s' % user.id, sku_id, count)
 
             # 处理勾选状态 set
@@ -253,7 +254,58 @@ class CartView(GenericAPIView):
 
             return response
 
+    def delete(self, request):
+        """删除购物车商品sku_id"""
+        # 校验
+        serializer = CartDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        # 取出校验后的数据
+        sku_id = serializer.validated_data["sku_id"]
+
+        # 尝试获取用户登录状态
+        try:
+            user = request.user
+        except Exception:
+            user = None
+
+        # 已登录,则从redis中删除
+        if user and user.is_authenticated:
+            redis_conn = get_redis_connection("cart")
+            # 通过管道实例对象进行对此操作
+            pl = redis_conn.pipeline()
+            # 删除hash
+            pl.hdel("cart_%s" % user.id, sku_id)
+            # 删除set的勾选状态
+            pl.srem("cart_selected_%s" % user.id, sku_id)
+
+            pl.execute()
+            # 删除成功进返回204状态码即可
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # 未登录,则从cookie中删除
+        else:
+            cookie_cart = request.COOKIES.get('cart')
+
+            if cookie_cart:
+                # 表示cookie中有购物车数据
+                # 解析
+                cart_dict = pickle.loads(base64.b64decode(cookie_cart.encode()))
+            else:
+                # 表示cookie中没有购物车数据
+                cart_dict = {}
+
+            # 先构造响应体
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+
+            # 在此id是cart_dict内的请求下在进行删除,不存在则过掉
+            if sku_id in cart_dict:
+                del cart_dict[sku_id]  # 删除字典中一个键值对
+
+                # 删除成功后通过响应体重新构造cookie
+                response.set_cookie("cart", cart_dict, max_age=constants.CART_COOKIE_EXPIRES)
+
+            return response
 
 
 
