@@ -84,9 +84,27 @@ var vm = new Vue({
                 this.update_count(i, this.cart[i].count);
             }
         },
+
         // 删除购物车数据
         on_delete: function(index){
-
+            // delete请求方式
+            axios.delete(this.host+'/cart/', {
+                    data: {
+                        sku_id: this.cart[index].id
+                    },
+                    headers:{
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    responseType: 'json',
+                    withCredentials: true
+                })
+                .then(response => {
+                    // 请求成功则:
+                    this.cart.splice(index, 1);
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         },
 
         on_input: function(index){
