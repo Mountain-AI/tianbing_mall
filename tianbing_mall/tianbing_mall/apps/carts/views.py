@@ -47,7 +47,7 @@ class CartView(GenericAPIView):
         except Exception:
             user = None
         # 已登录且认证过(非匿名),则保存到redis
-        if user and user.is_authentication:
+        if user and user.is_authenticated:
             # 获取redis连接对象
             redis_conn = get_redis_connection("cart")
             # 多步操作使用pipeline

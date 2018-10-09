@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
 
+from carts.utils import merge_cart_cookie_to_redis
 from oauth.exceptions import OAuthQQAPIError
 from oauth.models import OAuthQQUser
 from oauth.serializers import OAuthQQUserSerializer
@@ -80,17 +81,40 @@ class QQAuthUserView(CreateAPIView):
 
             # 响应数据:登录注册都一样:
             #   以下数据将在Response中放在第一个参数data中,前端通过request.data获取数据
-            return Response({
+            # return Response({
+            #     "username": user.username,
+            #     "user_id": user.id,
+            #     "token": token
+            # })
+            # 已绑定用户:返回response前,调用合并购物车数据的公共方法,并接受返回值作为response
+            response = Response({
                 "username": user.username,
                 "user_id": user.id,
                 "token": token
             })
+            response = merge_cart_cookie_to_redis(request, user, response)
 
-    # def post(self, request):
-    #     """
-    #     qq登录跳转到绑定页面后处理是绑定用户还是创建新用户
-    #     可使用CreateAPIView中提供的post方法,只需指定序列化器即可
-    #     """
+            return response
+
+    #
+    def post(self, request, *args, **kwargs):
+        """
+        qq登录跳转后:未绑定用户:创建新用户
+        """
+
+        response = super().post(request, *args, **kwargs)
+
+        # 当调用上面父类的方法后,获取user:
+        #   1,如果是自定义的序列化器,可以在序列化器内给context字典中给view添加user属性,在视图函数内user=self.user
+        #   2,如果不是自定义的序列化器,则从序列化器校验后的数据中取出user
+
+        user = self.user  # 采用第1种,去改写自定义的序列化器,返回前:赋值self.context["view"].user=user
+
+        # 调用合并购物车数据的公共方法,接收返回值作为response
+        response = merge_cart_cookie_to_redis(request, user, response)
+
+        return response
+
 
 
 

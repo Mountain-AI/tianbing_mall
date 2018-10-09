@@ -48,7 +48,7 @@ var vm = new Vue({
                         password: this.password
                     }, {
                         responseType: 'json',
-                        withCredentials: true
+                        withCredentials: true,
                     })
                     .then(response => {
                         // 使用浏览器本地存储保存token

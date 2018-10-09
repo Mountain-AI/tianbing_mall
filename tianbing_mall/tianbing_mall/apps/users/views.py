@@ -9,7 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_jwt.views import ObtainJSONWebToken
 
+from carts.utils import merge_cart_cookie_to_redis
 from goods.models import SKU
 from users import constants
 from . import serializers
@@ -248,6 +250,31 @@ class UserBrowserHistoryView(CreateAPIView):
         # HttpResponse和Response的区别:DRF提供的Response(其继承自HttpResponse)，提供了渲染器render对数据进行渲染，数据必须是字典;
         # 而HttpResponse不会进行加以渲染，指定content_type即可直接将图片对象返回
         return Response(serializer.data)
+
+
+class UserAuthorizerView(ObtainJSONWebToken):
+    """用户登录认证视图"""
+
+    # 定义post方法,调用父类的父类的post方法,接收其返回值作为response
+    def post(self, request, *args, **kwargs):
+
+        response = super().post(request, *args, **kwargs)
+
+        # 当调用上面父类的方法后,获取user:
+        #   1,如果是自定义的序列化器,可以在序列化器内给context字典中给view添加user属性,在视图函数内user=self.user
+        #   2,如果不是自定义的序列化器,则从序列化器校验后的数据中取出user
+
+        serializer = self.get_serializer(data=request.data)  # 采用第2种
+        # 父类中is_valid之后向serializer中添加了user
+        if serializer.is_valid():
+            # 取出用户
+            user = serializer.validated_data["user"]
+            # 调用合并购物车数据的公共方法,接收返回值作为response
+            response = merge_cart_cookie_to_redis(request, user, response)
+
+        return response
+
+
 
 
 

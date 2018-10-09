@@ -115,6 +115,9 @@ class OAuthQQUserSerializer(serializers.ModelSerializer):
         # 给user对象添加token属性值
         user.token = token
 
+        # 新增:返回新建的用户前,给视图添加user,用于视图post方法内:当调用父类的post方法之后,在进行合并购物车,能获取到user
+        self.context["view"].user = user
+
         # 返回用户后,当序列化时,使用的是返回后的user的数据
         return user
 

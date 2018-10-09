@@ -30,6 +30,7 @@ var vm = new Vue({
         var code = this.get_query_string('code');
         axios.get(this.host + '/oauth/qq/user/?code=' + code, {
                 responseType: 'json',
+                withCredentials: true,
             })
             .then(response => {
                 if (response.data.user_id){
@@ -185,6 +186,9 @@ var vm = new Vue({
                         access_token: this.access_token
                     }, {
                         responseType: 'json',
+                        // 在请求成功后需要设置token的请求内添加withCredentials为true,
+                            // 即是前端向后端请求时携带cookie凭证
+                        withCredentials: true,
                     })
                     .then(response => {
                         // 记录用户登录状态
