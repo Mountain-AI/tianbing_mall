@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'areas.apps.AreasConfig',  # 收货地址应用
     'goods.apps.GoodsConfig',
     'contents.apps.ContentsConfig',
+    'orders.apps.OrdersConfig',  # 订单
 
 ]
 
