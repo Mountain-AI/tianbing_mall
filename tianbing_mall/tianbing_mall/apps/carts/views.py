@@ -10,7 +10,7 @@ from rest_framework.response import Response
 import base64
 
 from carts import constants
-from carts.serializers import CartSerializer, CartSKUSerializer, CartDeleteSerializer
+from carts.serializers import CartSerializer, CartSKUSerializer, CartDeleteSerializer, CartSelectAllSerializer
 
 # /cart/  接收参数:sku_id,count
 from goods.models import SKU
@@ -256,7 +256,7 @@ class CartView(GenericAPIView):
 
     def delete(self, request):
         """删除购物车商品sku_id"""
-        # 校验
+        # 校验:使用方法内部的序列化器
         serializer = CartDeleteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -308,13 +308,81 @@ class CartView(GenericAPIView):
             return response
 
 
+class CartSelectAllView(GenericAPIView):
+    """购物车全部勾选视图"""
+    serializer_class = CartSelectAllSerializer
 
+    def perform_authentication(self, request):
+        """让视图自己进行身份认证"""
+        pass
 
+    def put(self, request):
+        """修改全选"""
+        # 校验
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        # 取出校验后的数据:从字典中取值
+        selected = serializer.validated_data["selected"]
 
+        # 尝试获取用户登录状态
+        try:
+            user = request.user
+        except Exception:
+            user = None
 
+        # 已登录,则从redis中删除
+        if user and user.is_authenticated:
+            redis_conn = get_redis_connection("cart")
 
+            # 取出当前用户的购物车数据:字典:键是sku_id, 值是count
+            redis_cart = redis_conn.hgetall("cart_%s" % user.id)
 
+            # 取出购物车数据中的键,也即是取出sku_id列表,方便后面操作
+            sku_id_list = redis_conn.keys()
+
+            if selected:
+                # selected=True全选,则将所有的sku_id添加到redis_set
+                redis_conn.sadd("cart_selected_%s" % user.id, *sku_id_list)  # 拆包添加
+            else:
+                # selected=False取消全选,则将redis_set清空
+                redis_conn.srem("cart_selected_%s" % user.id, *sku_id_list)  # 拆包删除
+
+            return Response({"message": "OK"})
+
+        # 未登录,从cookie中删除
+        else:
+            # 提取cookie_cart
+            cookie_cart = request.COOKIES.get("cart")
+
+            # 判断是否有购物车数据,并解析cart_dict
+            if cookie_cart:
+                # 解析出cart_dict:接收bytes类型,需将字符串编码
+                cart_dict = pickle.loads(base64.b64decode(cookie_cart.encode()))
+            else:
+                cart_dict = {}
+
+            # 为了设置cookie,需要先构造response
+            response = Response({"message": "OK"})
+
+            # 判断cart_dict是否不空
+            if cart_dict:
+                # cart_dict = {
+                #     sku_id_1: {
+                #         'count': 10
+                #         'selected': True
+                #     },
+                # }
+                # 便利所有的值,将其中的selected修改为False
+                for count_selected_dict in cart_dict.values():
+                    count_selected_dict["selected"] = selected
+
+                cart_cookie = base64.b64encode(pickle.dumps(cart_dict)).decode()
+
+                # 设置cookie
+                response.set_cookie("cart", cart_cookie, max_age=constants.CART_COOKIE_EXPIRES)
+
+            return response
 
 
 

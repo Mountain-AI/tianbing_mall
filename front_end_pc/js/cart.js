@@ -77,12 +77,27 @@ var vm = new Vue({
             var count = this.cart[index].count + 1;
             this.update_count(index, count);
         },
+
+        // 购物车全选
         on_selected_all: function(){
             var selected = !this.selected_all;
-            for (var i=0; i<this.cart.length;i++){
-                this.cart[i].selected = selected;
-                this.update_count(i, this.cart[i].count);
-            }
+            axios.put(this.host + '/cart/selection/', {
+                    selected  // 简写
+                }, {
+                    responseType: 'json',
+                    headers:{
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    withCredentials: true
+                })
+                .then(response => {
+                    for (var i=0; i<this.cart.length;i++){
+                        this.cart[i].selected = selected;
+                    }
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         },
 
         // 删除购物车数据
