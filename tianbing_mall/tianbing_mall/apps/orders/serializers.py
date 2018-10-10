@@ -110,36 +110,57 @@ class SaveOrderSerializer(serializers.ModelSerializer):
 
                 # 查询已勾选的商品对象
                 sku_id_list = cart.keys()
-                sku_obj_list = SKU.objects.filter(id__in=sku_id_list)  # 范围查询
+                # sku_obj_list = SKU.objects.filter(id__in=sku_id_list)  # 范围查询
 
                 # 遍历需要结算的商品数据
-                for sku in sku_obj_list:
-                    # cart={"sku_1": 8,....}
-                    sku_count = cart[sku.id]
+                for sku_id in sku_id_list:
 
-                    # 判断库存是否充足
-                    if sku.stock < sku_count:
-                        # 库存不足,回滚事务到保存点,并抛出异常
-                        transaction.savepoint_rollback(save_point)
-                        raise serializers.ValidationError("商品%s库存不足" % sku.name)
+                    while True:
+                        # 在循环体内查询当前商品对象
+                        sku = SKU.objects.get(id=sku_id)
+                        # 购买的商品数量cart={"sku_1": 8,....}
+                        sku_count = cart[sku.id]
 
-                    # sku表:库存减去sku_count,销量加sku_count
-                    sku.stock -= sku_count
-                    sku.sales += sku_count
-                    sku.save()
+                        # 并接收初始库存和销量
+                        origin__stock = sku.stock
+                        origin__sales = sku.sales
 
-                    # 保存订单商品信息表: OrderGoods新增一条当前商品数据
-                    OrderGoods.objects.create(
-                        order=order,  # 即是刚刚创建的订单对象
-                        sku=sku,
-                        count=sku_count,
-                        price=sku.price,
-                        # 其余字段都有默认值
-                    )
+                        # 判断库存是否充足
+                        if sku.stock < sku_count:
+                            # 库存不足,回滚事务到保存点,并抛出异常
+                            transaction.savepoint_rollback(save_point)
+                            raise serializers.ValidationError("商品%s库存不足" % sku.name)
 
-                    # 更新订单的count数据
-                    order.total_count += sku_count  # 订单总数
-                    order.total_amount += (sku_count * sku.price)  # 订单总额
+                        # sku表:库存减去sku_count,销量加sku_count
+                        # sku.stock -= sku_count
+                        # sku.sales += sku_count
+                        # sku.save()  # 此法容易造成多个用户都能抢到库存只有1件的商品
+
+                        # 使用更新update方法保存新的库存和销量
+                        new_stock = origin__stock - sku_count
+                        new_sales = origin__sales + sku_count
+                        # 增加乐观锁:防止多个用户购买,库存不足却都能下单成功的bug
+                        result = SKU.objects.filter(id=sku.id, stock=origin__stock).update(stock=new_stock, sales=new_sales)
+
+                        # update返回受影响的行数
+                        if result == 0:
+                            # 更新失败,有别的用户已经买掉了一点,则继续尝试查询
+                            continue
+
+                        # 保存订单商品信息表: OrderGoods新增一条当前商品数据
+                        OrderGoods.objects.create(
+                            order=order,  # 即是刚刚创建的订单对象
+                            sku=sku,
+                            count=sku_count,
+                            price=sku.price,
+                            # 其余字段都有默认值
+                        )
+
+                        # 更新订单的count数据
+                        order.total_count += sku_count  # 订单总数
+                        order.total_amount += (sku_count * sku.price)  # 订单总额
+
+                        break
 
                 # 当遍历完毕,此订单order的数据即构造完成,可以保存
                 order.total_amount += order.freight
