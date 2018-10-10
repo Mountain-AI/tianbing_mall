@@ -57,7 +57,7 @@ class CartView(GenericAPIView):
             # 保存购物车勾选状态(set类型:根据user_id进行去重保存sku_id)
             if selected:
                 # 如果接收的数据有勾选,则保存勾选状态的sku_id
-                pl.sadd("cart_selected%s" % user.id, sku_id)
+                pl.sadd("cart_selected_%s" % user.id, sku_id)
             # 执行pipeline
             pl.execute()
 
