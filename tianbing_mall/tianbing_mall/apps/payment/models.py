@@ -2,11 +2,7 @@ from django.db import models
 
 # Create your models here.
 
-
-from django.db import models
 from orders.models import OrderInfo
-
-# Create your models here.
 from tianbing_mall.utils.models import BaseModel
 
 
