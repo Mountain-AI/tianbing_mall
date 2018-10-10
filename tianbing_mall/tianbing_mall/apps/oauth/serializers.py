@@ -102,6 +102,7 @@ class OAuthQQUserSerializer(serializers.ModelSerializer):
             # 用户不存在则直接创建:第三种创建方式,直接传字段对应的值,将自动set_password加密
             user = User.objects.create_user(
                 username=mobile, mobile=mobile, password=password)
+
         # 用户存在了之后将其添加进与QQ的三方关系表
         OAuthQQUser.objects.create(user=user, openid=openid)
 

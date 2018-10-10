@@ -220,6 +220,7 @@ LOGGING = {
             'formatter': 'verbose'
         },
     },
+
     'loggers': {
         'django': {  # 定义了一个名为django的日志器
             'handlers': ['console', 'file'],

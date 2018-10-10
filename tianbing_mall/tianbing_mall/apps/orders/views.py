@@ -4,15 +4,16 @@ from django.shortcuts import render
 # Create your views here.
 from django_redis import get_redis_connection
 from rest_framework import serializers
+from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from goods.models import SKU
-from orders.serializers import OrderSettlementSerializer
+from orders.serializers import OrderSettlementSerializer, SaveOrderSerializer
 
 
-# orders/settlement/
+# GET orders/settlement/
 class OrderSettlementView(APIView):
     """
     订单结算视图
@@ -63,7 +64,14 @@ class OrderSettlementView(APIView):
         return Response(serializer.data)
 
 
-
+# POST /orders/
+class SaveOrderView(CreateAPIView):
+    """
+    保存订单:通过接收前端数据反序列化校验后创建数据到数据库中,再将order_id返回
+    其父类提供post方法
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = SaveOrderSerializer
 
 
 
