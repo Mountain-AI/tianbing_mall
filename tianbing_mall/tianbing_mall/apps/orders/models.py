@@ -16,6 +16,7 @@ class OrderInfo(BaseModel):
     """
     订单信息
     """
+    # 常量:支付方式的键
     PAY_METHODS_ENUM = {
         "CASH": 1,
         "ALIPAY": 2
@@ -26,6 +27,7 @@ class OrderInfo(BaseModel):
         (2, "支付宝"),
     )
 
+    # 常量:订单状态的键
     ORDER_STATUS_ENUM = {
         "UNPAID": 1,
         "UNSEND": 2,

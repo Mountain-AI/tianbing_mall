@@ -41,15 +41,15 @@ class SaveOrderSerializer(serializers.ModelSerializer):
         model = OrderInfo
         fields = ("order_id", "address", "pay_method")
 
-        # 声明仅序列化的字段
+        # 声明仅序列化返回的字段
         read_only_fields = ("order_id",)
         # 增加额外参数
         extra_kwargs = {
             "address": {
-                "write_only": True,  # 仅反序列化
+                "write_only": True,  # 仅反序列化校验;映射中没有require,则默认True
             },
             "pay_method": {
-                "write_only": True,  # 仅反序列化
+                "write_only": True,  # 仅反序列化校验
                 "required": True  # 有默认值,需声明必传字段
             }
         }
@@ -96,7 +96,7 @@ class SaveOrderSerializer(serializers.ModelSerializer):
                 # 生成订单号:strftime将datetime转为字符串;strptime将str转为datetime
                 order_id = timezone.now().strftime("%Y%m%d%H%M%S") + ("%09d" % user.id)
 
-                # 保存订单信息表: OrderInfo新增一条数据
+                # 保存订单信息表: OrderInfo新增一条数据,create方法返回创建成功的对象
                 order = OrderInfo.objects.create(
                     order_id=order_id,
                     user=user,
@@ -167,9 +167,10 @@ class SaveOrderSerializer(serializers.ModelSerializer):
                 order.save()
 
             except serializers.ValidationError:
+                # 作用:接收校验错误的异常,不再回滚
                 raise
             except Exception as e:
-                # 记录到log并回滚,抛出
+                # 其他异常记录到log并回滚,抛出
                 logger.error(e)
                 transaction.savepoint_rollback(save_point)
                 raise
