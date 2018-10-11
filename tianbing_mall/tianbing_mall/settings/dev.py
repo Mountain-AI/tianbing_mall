@@ -352,9 +352,9 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 # 支付宝配置
-ALIPAY_APPID =
+ALIPAY_APPID = 2016092200568771
 ALIPAY_DEBUG = True
-ALIPAY_URL = "https://openapi.alipaydev.com/geteway.do"
+ALIPAY_URL = "https://openapi.alipaydev.com/gateway.do"
 
 
 
