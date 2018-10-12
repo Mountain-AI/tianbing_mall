@@ -51,7 +51,7 @@ var vm = new Vue({
                         headers: {
                             'Authorization': 'JWT ' + this.token
                         },
-                        responseType: 'json'
+                        responseType: 'json',
                     })
                     .then(response => {
                         // 跳转到支付宝支付

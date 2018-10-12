@@ -49,6 +49,10 @@ INSTALLED_APPS = [
     'django_crontab',  # 定时任务
     'haystack',  # 注册haystack,用于调用对接Elasticsearch搜索引擎
 
+    'xadmin',  # 注册xadmin
+    'crispy_forms',  # xadmin依赖
+    'reversion',  # xadmin依赖
+
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
     'oauth.apps.OauthConfig',  # 注册qq登录应用
@@ -104,6 +108,14 @@ DATABASES = {
         'USER': 'tb',  # 数据库用户名
         'PASSWORD': 'tb',  # 数据库用户密码
         'NAME': 'Tianbing_Mall'  # 数据库名字
+    },
+    'slave': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': '127.0.0.1',
+        'PORT': 8306,
+        'USER': 'root',
+        'PASSWORD': 'mysql',
+        'NAME': 'Tianbing_Mall'
     }
 }
 
@@ -356,9 +368,11 @@ ALIPAY_APPID = 2016092200568771
 ALIPAY_DEBUG = True
 ALIPAY_URL = "https://openapi.alipaydev.com/gateway.do"
 
+# 配置读写分离分发类
+DATABASE_ROUTERS = ['tianbing_mall.utils.db_router.MasterSlaveDBRouter']
 
-
-
+# 收集django的静态文件的保存目录(django线上模式不在提供admin站点的样式)
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc/static')
 
 
 

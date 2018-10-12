@@ -46,11 +46,11 @@ class PaymentView(APIView):
             debug=settings.ALIPAY_DEBUG  # 是否是沙箱环境,默认False
         )
 
-        # 3,,通过实例进行电脑网站支付,返回一个支付宝支付链接信息
+        # 3,通过实例进行电脑网站支付,返回一个支付宝支付链接信息
         #   跳转至https://openapi.alipay.com/gateway.do? + order_string
         order_string = alipay_client.api_alipay_trade_page_pay(
             out_trade_no=order_id,
-            total_amount=str(order.total_amount),
+            total_amount=str(order.total_amount),  # Decimal类型转为str,防止不识别
             subject="天冰商城%s" % order_id,  # 订单标题
             return_url="http://www.meiduo.site:8080/pay_success.html",
             notify_url=None  # 可选,不填则使用默认值
@@ -69,7 +69,7 @@ class PaymentStatusView(APIView):
     """
     def put(self, request):
         """接收前端发送的支付成功后返回的数据,保存到数据库"""
-        # dict()??
+        # 提取参数
         alipay_request_data = request.query_params  # Query_dict
         if not alipay_request_data:
             return Response({"message": "缺少参数"}, status=status.HTTP_400_BAD_REQUEST)
@@ -103,8 +103,10 @@ class PaymentStatusView(APIView):
                 order_id=order_id,
                 trade_id=trade_id
             )
-            # 更新订单支付状态信息:以安全锁的方式(查询时更新)
-            OrderInfo.objects.filter(order_id=order_id, status=OrderInfo.ORDER_STATUS_ENUM["UNPAID"]).update(status=OrderInfo.ORDER_STATUS_ENUM["UNCOMMENT"])
+            # 更新订单支付状态信息
+            OrderInfo.objects.filter(order_id=order_id, status=OrderInfo.ORDER_STATUS_ENUM["UNPAID"]).update(status=OrderInfo.ORDER_STATUS_ENUM["UNSEND"])
+
+
 
             # 返回交易流水号
             return Response({"trade_id": trade_id})
